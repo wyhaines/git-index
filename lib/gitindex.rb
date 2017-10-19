@@ -10,19 +10,21 @@ module GitIndex
 
       case @config[ :command ]
       when :delete
-        delete_records( get_database )
+        delete_records(database)
       when :insert
-        index_git_repositories( get_database, find_git_directories )
+        index_git_repositories(database, git_directories)
       when :list
-        list_records( get_database )
+        list_records(database)
+      when :query
+        query_records(database)
       end
     end
 
-    def get_database
+    def database
       db = SQLite3::Database.new @config[ :database ]
 
       begin
-        db.execute( "select 1 from repositories" ) do | row |
+        db.execute("select 1 from repositories") do |row|
           break
         end
       rescue SQLite3::Exception => e
@@ -37,7 +39,7 @@ module GitIndex
       db
     end
 
-    def find_git_directories
+    def git_directories
       if @config[:recurse]
         untrimmed_directories = []
         ARGV.each do | base_path |
@@ -60,7 +62,7 @@ module GitIndex
     def index_git_repositories( db, dirs )
       dirs.each do |dir|
         codes = `git -C #{dir} rev-list --parents HEAD | tail -2`.split("\n")
-        hash =  codes.length > 1 ? codes.first : codes.last
+        hash = codes.length > 1 ? codes.first : codes.last
 
         if hash =~ /^([\w\d]+)\s+([\w\d]+)$/
           hash = "#{$2}#{$1}"
@@ -71,12 +73,12 @@ module GitIndex
       end
     end
 
-    def delete_records( db )
-      ARGV.each do | path_or_hash |
-        if FileTest.exist?( File.expand_path( path_or_hash ) )
-          path_or_hash = File.expand_path( path_or_hash )
+    def delete_records(db)
+      ARGV.each do |path_or_hash|
+        if FileTest.exist?(File.expand_path(path_or_hash))
+          path_or_hash = File.expand_path(path_or_hash)
           puts "deleting path #{path_or_hash}" if @config[:verbose]
-          db.execute("DELETE FROM repositories WHERE path = ?", [ path_or_hash ]) unless @config[:dryrun]
+          db.execute("DELETE FROM repositories WHERE path = ?", [path_or_hash]) unless @config[:dryrun]
         else
           puts "deleting hashes like #{path_or_hash}" if @config[:verbose]
           db.execute("DELETE FROM repositories where hash like ?", ["#{path_or_hash}%"]) unless @config[:dryrun]
@@ -84,10 +86,18 @@ module GitIndex
       end
     end
 
-    def list_records( db )
+    def list_records(db)
       puts "hash,path"
       db.execute("SELECT hash, path FROM repositories") do |row|
         puts row.join(',')
+      end
+    end
+
+    def query_records(db)
+      ARGV.each do |hash|
+        db.execute("SELECT hash, path from repositories WHERE hash like ?", ["#{hash}%"]) do |row|
+          puts "#{hash}: #{row[1]}"
+        end
       end
     end
 

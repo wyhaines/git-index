@@ -1,5 +1,6 @@
 
 require 'optparse'
+require 'gitindex/version'
 
 module GitIndex
   module Config
@@ -25,17 +26,27 @@ module GitIndex
           opts.on( '-r', '--recurse', 'Recursively search through the provided directories for git repositories.' ) do
             config[:recurse] = true
           end
+          opts.on( '-i', '--insert', 'The command line arguments are assumed to be paths to check for git repositories. This is the default mode of operation.' ) do
+            config[:command] = :insert
+          end
           opts.on( '-x', '--delete', 'The command line arguments are assumed to be hashes or paths to delete from the databse.' ) do
             config[:command] = :delete
           end
           opts.on( '-l', '--list', 'List the known repositories' ) do
             config[:command] = :list
           end
-          opts.on( '-v', '--verbose', 'Provide extra output about actions') do
+          opts.on( '-q', '--query', 'The command line arguments are assumed to be hashes to query for int he database. Matches will be returned, one per line, in the same order the hashes appear on the command line.' ) do |hash|
+            config[:command] = :query
+          end
+          opts.on( '-v', '--verbose', 'Provide extra output about actions' ) do
             config[:verbose] = true
           end
           opts.on( '-n', '--dry-run', "Find git repositories, but do not actually store them in the database. This option doesn't do much without also specifying --verbose." ) do
             config[:dryrun] = true
+          end
+          opts.on( '--version', "Output #{version_string}" ) do
+            puts version_string
+            exit 0
           end
         end
 
@@ -53,6 +64,10 @@ module GitIndex
 
         config[:command] ||= :insert
         config
+      end
+
+      def version_string
+        "git-index v#{GitIndex::VERSION}"
       end
     end
   end
