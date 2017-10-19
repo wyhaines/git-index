@@ -69,7 +69,7 @@ module GitIndex
         end
         db.execute("DELETE FROM repositories WHERE hash = ?", [hash]) unless @config[:dryrun]
         db.execute("INSERT INTO repositories (hash, path) VALUES (?, ?)", [hash, File.expand_path(dir)]) unless @config[:dryrun]
-        puts "#{hash} -> #{dir}" if @config[:verbose]
+        puts "#{hash} -> #{File.expand_path(dir)}" if @config[:verbose]
       end
     end
 
