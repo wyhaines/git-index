@@ -20,7 +20,7 @@ module GitIndex
             This tool takes one or more paths and checks them for the presence of a git repository. If one exists, it writes a record into the database of the first and second commit hashes of the repository and the path to the repository.
           EBANNER
           opts.separator ''
-          opts.on( '-d', '--database', String, 'The database file to write to. Defaults to $HOME/.git-index.db' ) do |path|
+          opts.on( '-d', '--database [PATH]', String, 'The database file to write to. Defaults to $HOME/.git-index.db' ) do |path|
             config[:database] = path
           end
           opts.on( '-r', '--recurse', 'Recursively search through the provided directories for git repositories.' ) do
