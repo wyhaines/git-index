@@ -31,7 +31,8 @@ module GitIndex
         db.execute <<~SQL
           create table repositories (
             hash varchar(160),
-            path varchar(250)
+            path varchar(250),
+            url varchar(250)
           );
         SQL
       end
@@ -62,20 +63,24 @@ module GitIndex
     def index_git_repositories( db, dirs )
       dirs.each do |dir|
         codes = `git -C #{dir} rev-list --parents HEAD | tail -2`.split("\n")
+        remote = `git config --get remote.origin.url`
         hash = codes.length > 1 ? codes.first : codes.last
 
         if hash =~ /^([\w\d]+)\s+([\w\d]+)$/
           hash = "#{$2}#{$1}"
         end
         db.execute("DELETE FROM repositories WHERE hash = ?", [hash]) unless @config[:dryrun]
-        db.execute("INSERT INTO repositories (hash, path) VALUES (?, ?)", [hash, File.expand_path(dir)]) unless @config[:dryrun]
+        db.execute("INSERT INTO repositories (hash, path, url) VALUES (?, ?, ?)", [hash, File.expand_path(dir), remote]) unless @config[:dryrun]
         puts "#{hash} -> #{File.expand_path(dir)}" if @config[:verbose]
       end
     end
 
     def delete_records(db)
       ARGV.each do |path_or_hash|
-        if FileTest.exist?(File.expand_path(path_or_hash))
+        if path_or_hash =~ URI::regexp
+          puts "deleting url #{path_or_hash}" if @config[:verbose]
+          db.execute("DELETE from repositories WHERE url = ?", [path_or_hash]) unless @config[:dryrun]
+        elsif FileTest.exist?(File.expand_path(path_or_hash))
           path_or_hash = File.expand_path(path_or_hash)
           puts "deleting path #{path_or_hash}" if @config[:verbose]
           db.execute("DELETE FROM repositories WHERE path = ?", [path_or_hash]) unless @config[:dryrun]
@@ -88,15 +93,15 @@ module GitIndex
 
     def list_records(db)
       puts "hash,path"
-      db.execute("SELECT hash, path FROM repositories") do |row|
+      db.execute("SELECT hash, path, url FROM repositories") do |row|
         puts row.join(',')
       end
     end
 
     def query_records(db)
       ARGV.each do |hash|
-        db.execute("SELECT hash, path from repositories WHERE hash like ?", ["#{hash}%"]) do |row|
-          puts "#{hash}: #{row[1]}"
+        db.execute("SELECT hash, path, url from repositories WHERE hash like ?", ["#{hash}%"]) do |row|
+          puts "#{hash}: #{row[1]}|#{row[2]}"
         end
       end
     end
