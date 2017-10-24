@@ -64,7 +64,7 @@ module GitIndex
     def index_git_repositories( db, dirs )
       dirs.each do |dir|
         codes = `git -C #{dir} rev-list --parents HEAD | tail -2`.split("\n")
-        remote = `git -C #{dir} config --get remote.origin.url`
+        remote = `git -C #{dir} config --get remote.origin.url`.strip
         hash = codes.length > 1 ? codes.first : codes.last
 
         if hash =~ /^([\w\d]+)\s+([\w\d]+)$/
@@ -100,9 +100,9 @@ module GitIndex
     end
 
     def query_records(db)
-      ARGV.each do |hash|
-        db.execute("SELECT hash, path, url from repositories WHERE hash like ?", ["#{hash}%"]) do |row|
-          puts "#{hash}: #{row[1]}|#{row[2]}"
+      ARGV.each do |hash_or_url|
+        db.execute("SELECT hash, path, url from repositories WHERE hash like ? or url = ?", ["#{hash_or_url}%"],[hash_or_url]) do |row|
+          puts "#{row[0]}: #{row[1]}|#{row[2]}"
         end
       end
     end
