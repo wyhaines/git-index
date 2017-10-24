@@ -1,6 +1,7 @@
 require 'sqlite3'
 require 'find'
 require 'gitindex/config'
+require 'uri'
 
 module GitIndex
 
@@ -63,7 +64,7 @@ module GitIndex
     def index_git_repositories( db, dirs )
       dirs.each do |dir|
         codes = `git -C #{dir} rev-list --parents HEAD | tail -2`.split("\n")
-        remote = `git config --get remote.origin.url`
+        remote = `git -C #{dir} config --get remote.origin.url`
         hash = codes.length > 1 ? codes.first : codes.last
 
         if hash =~ /^([\w\d]+)\s+([\w\d]+)$/
@@ -92,7 +93,7 @@ module GitIndex
     end
 
     def list_records(db)
-      puts "hash,path"
+      puts "hash,path,url"
       db.execute("SELECT hash, path, url FROM repositories") do |row|
         puts row.join(',')
       end
