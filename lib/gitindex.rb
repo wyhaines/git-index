@@ -70,7 +70,6 @@ module GitIndex
         if hash =~ /^([\w\d]+)\s+([\w\d]+)$/
           hash = "#{$2}#{$1}"
         end
-        db.execute("DELETE FROM repositories WHERE hash = ?", [hash]) unless @config[:dryrun]
         db.execute("INSERT INTO repositories (hash, path, url) VALUES (?, ?, ?)", [hash, File.expand_path(dir), remote]) unless @config[:dryrun]
         puts "#{hash} -> #{File.expand_path(dir)}" if @config[:verbose]
       end
