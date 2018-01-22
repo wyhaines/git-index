@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require "gitindex/version"
 
 Gem::Specification.new do |spec|
-  spec.name          = "gitindex"
+  spec.name          = "git-index"
   spec.version       = GitIndex::VERSION
   spec.authors       = ["Kirk Haines"]
   spec.email         = ["wyhaines@gmail.com"]
