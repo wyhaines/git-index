@@ -16,10 +16,18 @@ Gem::Specification.new do |spec|
     the first and the second commit hashes on the repository. The rationale is
     that these first couple of commits are unlikely to ever change as the
     result of a rebase, and thus make a fairly reliable fingerprint of the
-    identity of the repository.
+    identity of the repository. The motivation behind this tool is for use with
+    Serf and the serf-hander gem to power a slick, simple deployment manger
+    utiizing a git repo and deploy hooks at the underlying source and trigger.
   EDESC
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/wyhaines/git-index"
   spec.license       = "MIT"
+  spec.metadata = {
+    "bug_tracker_uri"   => "https://github.com/wyhaines/git-index/issues",
+    "documentation_uri" => "https://github.com/wyhaines/git-index",
+    "homepage_uri"      => "https://github.com/wyhaines/git-index",
+    "source_code_uri"   => "https://github.com/wyhaines/git-index",
+  }
 
   spec.files         = `git ls-files -z`.split("\x0").reject do |f|
     f.match(%r{^(test|spec|features)/})
